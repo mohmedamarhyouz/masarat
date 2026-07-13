@@ -1,0 +1,36 @@
+{
+  "format": "masarat",
+  "schemaVersion": "1.0",
+  "project": {
+    "id": "simple-g3-pro-example",
+    "title": "مثال قرار G3 Pro",
+    "description": "ملف صغير لتجربة الاستيراد.",
+    "goal": "اختبار المركبة قبل الاعتماد عليها يوميًا.",
+    "status": "exploring",
+    "createdAt": "2026-07-13T20:00:00.000Z",
+    "updatedAt": "2026-07-13T20:00:00.000Z",
+    "currentVersion": 1
+  },
+  "constraints": [
+    { "id": "budget", "title": "ميزانية محدودة", "category": "financial" }
+  ],
+  "nodes": [
+    { "id": "now", "type": "situation", "title": "تنقل يومي طويل", "stage": 0 },
+    { "id": "decision", "type": "decision", "title": "هل أجرّب G3 Pro؟", "stage": 1 },
+    { "id": "trial", "type": "option", "title": "تجربة 30 يومًا", "stage": 2 },
+    { "id": "review", "type": "checkpoint", "title": "قرار نهائي", "stage": 3 }
+  ],
+  "connections": [
+    { "id": "e1", "source": "now", "target": "decision" },
+    { "id": "e2", "source": "decision", "target": "trial" },
+    { "id": "e3", "source": "trial", "target": "review" }
+  ],
+  "tasks": [
+    { "id": "helmet", "title": "شراء خوذة", "status": "pending", "priority": "high" }
+  ],
+  "assumptions": [],
+  "checkpoints": [],
+  "realityEvents": [],
+  "changes": [],
+  "versions": []
+}
