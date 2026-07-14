@@ -30,6 +30,15 @@ describe('Masarat application shell', () => {
     await screen.findByText('حوّل الاحتمالات إلى خطوات واضحة.')
     fireEvent.click(screen.getByRole('button', { name: 'الخريطة' }))
     await waitFor(() => expect(screen.getByText('خريطة القرار')).toBeInTheDocument())
-    expect(screen.getByText('كيف سأتنقل هذا العام؟')).toBeInTheDocument()
+    expect(screen.getAllByText('كيف سأتنقل هذا العام؟').length).toBeGreaterThan(0)
+    expect(screen.getByRole('button', { name: 'مساري فقط' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'كل الفروع' })).toBeInTheDocument()
+  })
+
+  it('continues directly from the dashboard to the next task', async () => {
+    render(<App />)
+    await screen.findByText('حوّل الاحتمالات إلى خطوات واضحة.')
+    fireEvent.click(screen.getByRole('button', { name: 'تابع الخطوة التالية' }))
+    await waitFor(() => expect(screen.getByText('قائمة التنفيذ')).toBeInTheDocument())
   })
 })

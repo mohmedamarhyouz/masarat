@@ -1,4 +1,4 @@
-import { Download, FileUp, Plus, Sparkles } from 'lucide-react'
+import { Download, FileUp, Plus, Sparkles, Zap } from 'lucide-react'
 import { calculateProgress, downloadProject } from '../../lib/project-utils'
 import type { MasaratProject } from '../../types/masarat'
 
@@ -10,6 +10,7 @@ interface HeaderProps {
 
 export function Header({ project, onImport, onChange }: HeaderProps) {
   const progress = project ? calculateProgress(project) : 0
+  const nextTask = project?.tasks.find((task) => task.status === 'in_progress') ?? project?.tasks.find((task) => task.status === 'pending')
   return (
     <header className="topbar">
       <div className="topbar__context">
@@ -22,6 +23,7 @@ export function Header({ project, onImport, onChange }: HeaderProps) {
               <span className="eyebrow">المشروع النشط</span>
               <h1>{project.project.title}</h1>
             </div>
+            {nextTask && <div className="topbar__next"><Zap size={14} /><div><small>التالي</small><strong>{nextTask.title}</strong></div></div>}
           </>
         ) : (
           <div>

@@ -1,9 +1,12 @@
 import { create } from 'zustand'
 import { sampleProject } from '../data/sample-project'
+import { defaultGoals, defaultLifeAreas } from '../data/life-foundation'
 import { db } from '../lib/db'
 import { collectPathNodeIds, makeSnapshot, mergeProjectUpdate } from '../lib/project-utils'
 import type {
   ChangeEvent,
+  Goal,
+  LifeArea,
   MasaratProject,
   PlanVersion,
   RealityEvent,
@@ -14,6 +17,8 @@ export type AppView = 'dashboard' | 'canvas' | 'plan' | 'timeline' | 'versions'
 
 interface MasaratState {
   projects: MasaratProject[]
+  lifeAreas: LifeArea[]
+  goals: Goal[]
   activeProjectId?: string
   selectedNodeId?: string
   view: AppView
@@ -37,17 +42,29 @@ async function persist(project: MasaratProject) {
 
 export const useMasaratStore = create<MasaratState>((set, get) => ({
   projects: [],
+  lifeAreas: [],
+  goals: [],
   view: 'dashboard',
   isReady: false,
 
   initialize: async () => {
+    let lifeAreas = await db.lifeAreas.orderBy('order').toArray()
+    if (!lifeAreas.length) {
+      await db.lifeAreas.bulkPut(defaultLifeAreas)
+      lifeAreas = defaultLifeAreas
+    }
+    let goals = await db.goals.toArray()
+    if (!goals.length) {
+      await db.goals.bulkPut(defaultGoals)
+      goals = defaultGoals
+    }
     let projects = await db.projects.toArray()
     if (!projects.length) {
       await persist(sampleProject)
       projects = [sampleProject]
     }
     projects.sort((a, b) => b.project.updatedAt.localeCompare(a.project.updatedAt))
-    set({ projects, activeProjectId: projects[0]?.project.id, isReady: true })
+    set({ projects, lifeAreas, goals, activeProjectId: projects[0]?.project.id, isReady: true })
   },
 
   setView: (view) => set({ view }),

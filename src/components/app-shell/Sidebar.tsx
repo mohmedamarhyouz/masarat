@@ -2,12 +2,12 @@ import { Clock3, GitBranch, LayoutGrid, ListChecks, Milestone } from 'lucide-rea
 import { Logo } from '../Logo'
 import { useMasaratStore, type AppView } from '../../store/use-masarat-store'
 
-const navItems: Array<{ id: AppView; label: string; icon: typeof LayoutGrid }> = [
-  { id: 'dashboard', label: 'المشاريع', icon: LayoutGrid },
-  { id: 'canvas', label: 'الخريطة', icon: GitBranch },
-  { id: 'plan', label: 'التنفيذ', icon: ListChecks },
-  { id: 'timeline', label: 'سجل الواقع', icon: Clock3 },
-  { id: 'versions', label: 'الإصدارات', icon: Milestone },
+const navItems: Array<{ id: AppView; label: string; hint: string; icon: typeof LayoutGrid }> = [
+  { id: 'dashboard', label: 'المشاريع', hint: 'نظرة عامة', icon: LayoutGrid },
+  { id: 'canvas', label: 'الخريطة', hint: 'القرارات والفروع', icon: GitBranch },
+  { id: 'plan', label: 'التنفيذ', hint: 'خطوتك التالية', icon: ListChecks },
+  { id: 'timeline', label: 'سجل الواقع', hint: 'ما حدث فعليًا', icon: Clock3 },
+  { id: 'versions', label: 'الإصدارات', hint: 'تاريخ الخطة', icon: Milestone },
 ]
 
 export function Sidebar() {
@@ -24,11 +24,12 @@ export function Sidebar() {
             <button
               key={item.id}
               className={`nav-item ${view === item.id ? 'nav-item--active' : ''}`}
+              aria-label={item.label}
               onClick={() => !disabled && setView(item.id)}
               disabled={disabled}
             >
               <Icon size={19} strokeWidth={1.8} />
-              <span>{item.label}</span>
+              <span className="nav-item__copy"><strong>{item.label}</strong><small>{item.hint}</small></span>
             </button>
           )
         })}

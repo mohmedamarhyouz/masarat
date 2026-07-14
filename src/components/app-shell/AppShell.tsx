@@ -13,6 +13,8 @@ interface AppShellProps {
 export function AppShell({ children, project, onImport, onChange }: AppShellProps) {
   return (
     <div className="app-shell">
+      <div className="app-ambient app-ambient--one" />
+      <div className="app-ambient app-ambient--two" />
       <Sidebar />
       <div className="app-main">
         <Header project={project} onImport={onImport} onChange={onChange} />
