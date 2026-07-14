@@ -1,53 +1,30 @@
-import {
-  BookOpenCheck,
-  Clock3,
-  Compass,
-  LayoutGrid,
-  Route,
-  Settings2,
-  SunMedium,
-  Target,
-} from 'lucide-react'
+import { BookOpenCheck, Clock3, Compass, LayoutGrid, Route, Settings2, SunMedium, Target } from 'lucide-react'
 import { Logo } from '../Logo'
+import { useI18n } from '../../lib/i18n'
 import { isPathView, useMasaratStore, type PrimaryView } from '../../store/use-masarat-store'
 
-const navItems: Array<{ id: PrimaryView; label: string; hint: string; icon: typeof LayoutGrid }> = [
-  { id: 'today', label: 'اليوم', hint: 'مركز التركيز', icon: SunMedium },
-  { id: 'life', label: 'حياتي', hint: 'كل المجالات', icon: Compass },
-  { id: 'goals', label: 'الأهداف', hint: 'ما تريد تحقيقه', icon: Target },
-  { id: 'paths', label: 'المسارات', hint: 'المشاريع والقرارات', icon: Route },
-  { id: 'global-timeline', label: 'الخط الزمني', hint: 'ما حدث وتغيّر', icon: Clock3 },
-  { id: 'reviews', label: 'المراجعات', hint: 'تعلّم وعدّل', icon: BookOpenCheck },
-  { id: 'settings', label: 'الإعدادات', hint: 'الخصوصية والنسخ', icon: Settings2 },
-]
+const icons: Record<PrimaryView, typeof LayoutGrid> = { today: SunMedium, life: Compass, goals: Target, paths: Route, 'global-timeline': Clock3, reviews: BookOpenCheck, settings: Settings2 }
 
 export function Sidebar() {
   const { view, setView } = useMasaratStore()
+  const { t } = useI18n()
   const activePrimary = isPathView(view) ? 'paths' : view
+  const labels: Record<PrimaryView, { label: string; hint: string }> = {
+    today: { label: t.today, hint: t.todayHint }, life: { label: t.life, hint: t.lifeHint }, goals: { label: t.goals, hint: t.goalsHint }, paths: { label: t.paths, hint: t.pathsHint }, 'global-timeline': { label: t.timeline, hint: t.timelineHint }, reviews: { label: t.reviews, hint: t.reviewsHint }, settings: { label: t.settings, hint: t.settingsHint },
+  }
+  const groups: Array<{ label: string; items: PrimaryView[] }> = [
+    { label: t.navControl, items: ['today', 'life'] },
+    { label: t.navPlan, items: ['goals', 'paths'] },
+    { label: t.navReflect, items: ['global-timeline', 'reviews', 'settings'] },
+  ]
 
   return (
     <aside className="sidebar">
       <div className="sidebar__brand"><Logo /></div>
-      <nav className="sidebar__nav" aria-label="التنقل الرئيسي">
-        {navItems.map((item) => {
-          const Icon = item.icon
-          return (
-            <button
-              key={item.id}
-              className={`nav-item ${activePrimary === item.id ? 'nav-item--active' : ''}`}
-              aria-label={item.label}
-              onClick={() => setView(item.id)}
-            >
-              <Icon size={19} strokeWidth={1.8} />
-              <span className="nav-item__copy"><strong>{item.label}</strong><small>{item.hint}</small></span>
-            </button>
-          )
-        })}
+      <nav className="sidebar__nav" aria-label={t.navControl}>
+        {groups.map((group) => <div className="nav-group" key={group.label}><span className="nav-group__label">{group.label}</span>{group.items.map((id) => { const Icon = icons[id]; const item = labels[id]; return <button key={id} className={`nav-item ${activePrimary === id ? 'nav-item--active' : ''}`} aria-label={item.label} onClick={() => setView(id)}><Icon size={19} strokeWidth={1.8} /><span className="nav-item__copy"><strong>{item.label}</strong><small>{item.hint}</small></span>{activePrimary === id && <i className="nav-item__active-dot" />}</button> })}</div>)}
       </nav>
-      <div className="sidebar__footer">
-        <span className="offline-dot" />
-        <div><strong>محلي وخاص</strong><small>لا تُرسل بياناتك لأي خادم</small></div>
-      </div>
+      <div className="sidebar__footer"><span className="offline-dot" /><div><strong>{t.localPrivate}</strong><small>{t.localPrivateHint}</small></div></div>
     </aside>
   )
 }

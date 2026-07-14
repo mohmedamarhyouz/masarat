@@ -3,6 +3,7 @@ import { sampleProject } from '../data/sample-project'
 import { defaultGoals, defaultLifeAreas } from '../data/life-foundation'
 import { db } from '../lib/db'
 import { collectPathNodeIds, makeSnapshot, mergeProjectUpdate } from '../lib/project-utils'
+import type { Language } from '../lib/i18n'
 import type {
   ChangeEvent,
   Goal,
@@ -33,13 +34,17 @@ interface MasaratState {
   metrics: Metric[]
   metricEntries: MetricEntry[]
   reviews: Review[]
+  language: Language
   activeProjectId?: string
+  activeAreaId?: string
   selectedNodeId?: string
   view: AppView
   isReady: boolean
   initialize: () => Promise<void>
   setView: (view: AppView) => void
+  setLanguage: (language: Language) => void
   setActiveProject: (projectId: string) => void
+  setActiveArea: (areaId?: string) => void
   setSelectedNode: (nodeId?: string) => void
   importProject: (project: MasaratProject, mode?: 'new' | 'update') => Promise<void>
   importLifePack: (pack: LifePack) => Promise<void>
@@ -71,6 +76,7 @@ export const useMasaratStore = create<MasaratState>((set, get) => ({
   metrics: [],
   metricEntries: [],
   reviews: [],
+  language: typeof window !== 'undefined' && window.localStorage.getItem('masarat-language') === 'en' ? 'en' : 'ar',
   view: 'today',
   isReady: false,
 
@@ -100,7 +106,14 @@ export const useMasaratStore = create<MasaratState>((set, get) => ({
   },
 
   setView: (view) => set({ view }),
+  setLanguage: (language) => {
+    window.localStorage.setItem('masarat-language', language)
+    document.documentElement.lang = language
+    document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr'
+    set({ language })
+  },
   setActiveProject: (activeProjectId) => set({ activeProjectId, selectedNodeId: undefined }),
+  setActiveArea: (activeAreaId) => set({ activeAreaId }),
   setSelectedNode: (selectedNodeId) => set({ selectedNodeId }),
 
   importProject: async (incoming, mode = 'new') => {

@@ -49,6 +49,12 @@ function App() {
     initialize()
   }, [initialize])
 
+  const language = useMasaratStore((state) => state.language)
+  useEffect(() => {
+    document.documentElement.lang = language
+    document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr'
+  }, [language])
+
   useEffect(() => {
     if (!toast) return
     const timer = window.setTimeout(() => setToast(undefined), 2600)
