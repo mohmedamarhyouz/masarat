@@ -8,6 +8,9 @@ export function SmartBrief() {
   const { language, t } = useI18n()
   const { projects, lifeAreas, goals, setView, setActiveProject } = useMasaratStore()
   const insights = buildSmartInsights(projects, lifeAreas, goals)
+  const openTasks = projects.flatMap((project) => project.tasks).filter((task) => !['completed', 'cancelled'].includes(task.status)).length
+  const criticalAreas = lifeAreas.filter((area) => !area.archived && area.status === 'critical').length
+  const c = language === 'ar' ? { scan: 'نطاق الفحص', paths: 'مسارات', open: 'مهام مفتوحة', critical: 'مجالات حرجة', updated: 'يُحدّث تلقائيًا من بياناتك المحلية' } : { scan: 'System scan', paths: 'Paths', open: 'Open tasks', critical: 'Critical areas', updated: 'Updates automatically from your local data' }
 
   const openInsight = (index: number) => {
     const insight = insights[index]
@@ -28,6 +31,7 @@ export function SmartBrief() {
           )
         })}
       </div>
+      <div className="smart-brief__scan"><div><span>{c.scan}</span><small>{c.updated}</small></div><ul><li><strong>{projects.length}</strong>{c.paths}</li><li><strong>{openTasks}</strong>{c.open}</li><li><strong>{criticalAreas}</strong>{c.critical}</li></ul></div>
     </section>
   )
 }
