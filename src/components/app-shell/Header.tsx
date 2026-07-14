@@ -1,6 +1,17 @@
 import { Download, FileUp, Plus, Sparkles, Zap } from 'lucide-react'
 import { calculateProgress, downloadProject } from '../../lib/project-utils'
 import type { MasaratProject } from '../../types/masarat'
+import { useMasaratStore, type PrimaryView } from '../../store/use-masarat-store'
+
+const pageTitles: Record<PrimaryView, { eyebrow: string; title: string }> = {
+  today: { eyebrow: 'مركز القيادة', title: 'اليوم' },
+  life: { eyebrow: 'الصورة الكاملة', title: 'حياتي' },
+  goals: { eyebrow: 'الاتجاه والنتيجة', title: 'الأهداف' },
+  paths: { eyebrow: 'المشاريع والقرارات', title: 'المسارات' },
+  'global-timeline': { eyebrow: 'ذاكرة حياتك', title: 'الخط الزمني' },
+  reviews: { eyebrow: 'تعلّم من الواقع', title: 'المراجعات' },
+  settings: { eyebrow: 'الخصوصية والتحكم', title: 'الإعدادات' },
+}
 
 interface HeaderProps {
   project?: MasaratProject
@@ -9,6 +20,7 @@ interface HeaderProps {
 }
 
 export function Header({ project, onImport, onChange }: HeaderProps) {
+  const view = useMasaratStore((state) => state.view)
   const progress = project ? calculateProgress(project) : 0
   const nextTask = project?.tasks.find((task) => task.status === 'in_progress') ?? project?.tasks.find((task) => task.status === 'pending')
   return (
@@ -27,8 +39,8 @@ export function Header({ project, onImport, onChange }: HeaderProps) {
           </>
         ) : (
           <div>
-            <span className="eyebrow">مساحة قراراتك</span>
-            <h1>كل المسارات</h1>
+            <span className="eyebrow">{pageTitles[view as PrimaryView]?.eyebrow ?? 'مساحة قراراتك'}</span>
+            <h1>{pageTitles[view as PrimaryView]?.title ?? 'مسارات'}</h1>
           </div>
         )}
       </div>

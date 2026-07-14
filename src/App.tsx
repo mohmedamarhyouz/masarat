@@ -6,7 +6,14 @@ import { ChangeModal } from './components/modals/ChangeModal'
 import { ImportProjectModal } from './components/modals/ImportProjectModal'
 import { RealityEventModal } from './components/modals/RealityEventModal'
 import { DashboardPage } from './pages/DashboardPage'
-import { useMasaratStore } from './store/use-masarat-store'
+import { GlobalTimelinePage } from './pages/GlobalTimelinePage'
+import { GoalsPage } from './pages/GoalsPage'
+import { LifePage } from './pages/LifePage'
+import { PathOverviewPage } from './pages/PathOverviewPage'
+import { ReviewsPage } from './pages/ReviewsPage'
+import { SettingsPage } from './pages/SettingsPage'
+import { TodayPage } from './pages/TodayPage'
+import { isPathView, useMasaratStore } from './store/use-masarat-store'
 import type { ChangeEvent, RealityEvent } from './types/masarat'
 
 const CanvasPage = lazy(() => import('./pages/CanvasPage').then((module) => ({ default: module.CanvasPage })))
@@ -55,12 +62,17 @@ function App() {
   }
 
   const page = (() => {
-    if (view === 'dashboard') {
-      return <DashboardPage onImport={() => setShowImport(true)} />
-    }
+    if (view === 'today') return <TodayPage onQuickEvent={() => setShowReality(true)} onQuickChange={() => setShowChange(true)} />
+    if (view === 'life') return <LifePage />
+    if (view === 'goals') return <GoalsPage />
+    if (view === 'paths') return <DashboardPage onImport={() => setShowImport(true)} />
+    if (view === 'global-timeline') return <GlobalTimelinePage />
+    if (view === 'reviews') return <ReviewsPage />
+    if (view === 'settings') return <SettingsPage onImport={() => setShowImport(true)} />
     if (!activeProject) {
       return <DashboardPage onImport={() => setShowImport(true)} />
     }
+    if (view === 'path-overview') return <PathOverviewPage project={activeProject} />
     if (view === 'canvas') return <CanvasPage project={activeProject} />
     if (view === 'plan') return <PlanPage project={activeProject} />
     if (view === 'timeline') {
@@ -84,7 +96,7 @@ function App() {
   return (
     <>
       <AppShell
-        project={activeProject}
+        project={isPathView(view) ? activeProject : undefined}
         onImport={() => setShowImport(true)}
         onChange={() => setShowChange(true)}
       >

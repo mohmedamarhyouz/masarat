@@ -1,17 +1,29 @@
-import { Clock3, GitBranch, LayoutGrid, ListChecks, Milestone } from 'lucide-react'
+import {
+  BookOpenCheck,
+  Clock3,
+  Compass,
+  LayoutGrid,
+  Route,
+  Settings2,
+  SunMedium,
+  Target,
+} from 'lucide-react'
 import { Logo } from '../Logo'
-import { useMasaratStore, type AppView } from '../../store/use-masarat-store'
+import { isPathView, useMasaratStore, type PrimaryView } from '../../store/use-masarat-store'
 
-const navItems: Array<{ id: AppView; label: string; hint: string; icon: typeof LayoutGrid }> = [
-  { id: 'dashboard', label: 'المشاريع', hint: 'نظرة عامة', icon: LayoutGrid },
-  { id: 'canvas', label: 'الخريطة', hint: 'القرارات والفروع', icon: GitBranch },
-  { id: 'plan', label: 'التنفيذ', hint: 'خطوتك التالية', icon: ListChecks },
-  { id: 'timeline', label: 'سجل الواقع', hint: 'ما حدث فعليًا', icon: Clock3 },
-  { id: 'versions', label: 'الإصدارات', hint: 'تاريخ الخطة', icon: Milestone },
+const navItems: Array<{ id: PrimaryView; label: string; hint: string; icon: typeof LayoutGrid }> = [
+  { id: 'today', label: 'اليوم', hint: 'مركز التركيز', icon: SunMedium },
+  { id: 'life', label: 'حياتي', hint: 'كل المجالات', icon: Compass },
+  { id: 'goals', label: 'الأهداف', hint: 'ما تريد تحقيقه', icon: Target },
+  { id: 'paths', label: 'المسارات', hint: 'المشاريع والقرارات', icon: Route },
+  { id: 'global-timeline', label: 'الخط الزمني', hint: 'ما حدث وتغيّر', icon: Clock3 },
+  { id: 'reviews', label: 'المراجعات', hint: 'تعلّم وعدّل', icon: BookOpenCheck },
+  { id: 'settings', label: 'الإعدادات', hint: 'الخصوصية والنسخ', icon: Settings2 },
 ]
 
 export function Sidebar() {
-  const { view, setView, activeProjectId } = useMasaratStore()
+  const { view, setView } = useMasaratStore()
+  const activePrimary = isPathView(view) ? 'paths' : view
 
   return (
     <aside className="sidebar">
@@ -19,14 +31,12 @@ export function Sidebar() {
       <nav className="sidebar__nav" aria-label="التنقل الرئيسي">
         {navItems.map((item) => {
           const Icon = item.icon
-          const disabled = item.id !== 'dashboard' && !activeProjectId
           return (
             <button
               key={item.id}
-              className={`nav-item ${view === item.id ? 'nav-item--active' : ''}`}
+              className={`nav-item ${activePrimary === item.id ? 'nav-item--active' : ''}`}
               aria-label={item.label}
-              onClick={() => !disabled && setView(item.id)}
-              disabled={disabled}
+              onClick={() => setView(item.id)}
             >
               <Icon size={19} strokeWidth={1.8} />
               <span className="nav-item__copy"><strong>{item.label}</strong><small>{item.hint}</small></span>

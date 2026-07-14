@@ -13,7 +13,12 @@ import type {
   Task,
 } from '../types/masarat'
 
-export type AppView = 'dashboard' | 'canvas' | 'plan' | 'timeline' | 'versions'
+export type PrimaryView = 'today' | 'life' | 'goals' | 'paths' | 'global-timeline' | 'reviews' | 'settings'
+export type PathView = 'path-overview' | 'canvas' | 'plan' | 'timeline' | 'versions'
+export type AppView = PrimaryView | PathView
+
+export const pathViews: PathView[] = ['path-overview', 'canvas', 'plan', 'timeline', 'versions']
+export const isPathView = (view: AppView): view is PathView => pathViews.includes(view as PathView)
 
 interface MasaratState {
   projects: MasaratProject[]
@@ -31,6 +36,7 @@ interface MasaratState {
   deleteProject: (projectId: string) => Promise<void>
   choosePath: (optionNodeId: string) => Promise<void>
   updateTask: (taskId: string, patch: Partial<Task>) => Promise<void>
+  updateProjectTask: (projectId: string, taskId: string, patch: Partial<Task>) => Promise<void>
   addRealityEvent: (event: RealityEvent) => Promise<void>
   recordChange: (change: ChangeEvent) => Promise<void>
   restoreVersion: (version: PlanVersion) => Promise<void>
@@ -44,7 +50,7 @@ export const useMasaratStore = create<MasaratState>((set, get) => ({
   projects: [],
   lifeAreas: [],
   goals: [],
-  view: 'dashboard',
+  view: 'today',
   isReady: false,
 
   initialize: async () => {
@@ -87,7 +93,7 @@ export const useMasaratStore = create<MasaratState>((set, get) => ({
     await db.projects.delete(projectId)
     set((state) => {
       const projects = state.projects.filter((item) => item.project.id !== projectId)
-      return { projects, activeProjectId: projects[0]?.project.id, view: 'dashboard' }
+      return { projects, activeProjectId: projects[0]?.project.id, view: 'paths' }
     })
   },
 
@@ -110,7 +116,13 @@ export const useMasaratStore = create<MasaratState>((set, get) => ({
   },
 
   updateTask: async (taskId, patch) => {
-    const current = get().projects.find((item) => item.project.id === get().activeProjectId)
+    const projectId = get().activeProjectId
+    if (!projectId) return
+    await get().updateProjectTask(projectId, taskId, patch)
+  },
+
+  updateProjectTask: async (projectId, taskId, patch) => {
+    const current = get().projects.find((item) => item.project.id === projectId)
     if (!current) return
     const now = new Date().toISOString()
     const project: MasaratProject = {
