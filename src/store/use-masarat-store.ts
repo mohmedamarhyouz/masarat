@@ -7,9 +7,15 @@ import type {
   ChangeEvent,
   Goal,
   LifeArea,
+  LifePack,
+  MasaratBackup,
   MasaratProject,
+  Metric,
+  MetricEntry,
   PlanVersion,
+  ProjectMeta,
   RealityEvent,
+  Review,
   Task,
 } from '../types/masarat'
 
@@ -24,6 +30,9 @@ interface MasaratState {
   projects: MasaratProject[]
   lifeAreas: LifeArea[]
   goals: Goal[]
+  metrics: Metric[]
+  metricEntries: MetricEntry[]
+  reviews: Review[]
   activeProjectId?: string
   selectedNodeId?: string
   view: AppView
@@ -33,7 +42,16 @@ interface MasaratState {
   setActiveProject: (projectId: string) => void
   setSelectedNode: (nodeId?: string) => void
   importProject: (project: MasaratProject, mode?: 'new' | 'update') => Promise<void>
+  importLifePack: (pack: LifePack) => Promise<void>
+  restoreBackup: (backup: MasaratBackup) => Promise<void>
   deleteProject: (projectId: string) => Promise<void>
+  saveLifeArea: (area: LifeArea) => Promise<void>
+  archiveLifeArea: (areaId: string) => Promise<void>
+  saveGoal: (goal: Goal) => Promise<void>
+  archiveGoal: (goalId: string) => Promise<void>
+  saveReview: (review: Review) => Promise<void>
+  deleteReview: (reviewId: string) => Promise<void>
+  updateProjectMeta: (projectId: string, patch: Partial<ProjectMeta>) => Promise<void>
   choosePath: (optionNodeId: string) => Promise<void>
   updateTask: (taskId: string, patch: Partial<Task>) => Promise<void>
   updateProjectTask: (projectId: string, taskId: string, patch: Partial<Task>) => Promise<void>
@@ -50,6 +68,9 @@ export const useMasaratStore = create<MasaratState>((set, get) => ({
   projects: [],
   lifeAreas: [],
   goals: [],
+  metrics: [],
+  metricEntries: [],
+  reviews: [],
   view: 'today',
   isReady: false,
 
@@ -69,8 +90,13 @@ export const useMasaratStore = create<MasaratState>((set, get) => ({
       await persist(sampleProject)
       projects = [sampleProject]
     }
+    const [metrics, metricEntries, reviews] = await Promise.all([
+      db.metrics.toArray(),
+      db.metricEntries.toArray(),
+      db.reviews.orderBy('startDate').reverse().toArray(),
+    ])
     projects.sort((a, b) => b.project.updatedAt.localeCompare(a.project.updatedAt))
-    set({ projects, lifeAreas, goals, activeProjectId: projects[0]?.project.id, isReady: true })
+    set({ projects, lifeAreas, goals, metrics, metricEntries, reviews, activeProjectId: projects[0]?.project.id, isReady: true })
   },
 
   setView: (view) => set({ view }),
@@ -89,12 +115,90 @@ export const useMasaratStore = create<MasaratState>((set, get) => ({
     }))
   },
 
+  importLifePack: async (pack) => {
+    const currentProjects = new Map(get().projects.map((item) => [item.project.id, item]))
+    const projects = pack.projects.map((incoming) => {
+      const current = currentProjects.get(incoming.project.id)
+      return current ? mergeProjectUpdate(current, incoming) : incoming
+    })
+    await db.transaction('rw', [db.projects, db.lifeAreas, db.goals, db.metrics, db.metricEntries, db.reviews], async () => {
+      if (pack.areas.length) await db.lifeAreas.bulkPut(structuredClone(pack.areas))
+      if (pack.goals.length) await db.goals.bulkPut(structuredClone(pack.goals))
+      if (projects.length) await db.projects.bulkPut(structuredClone(projects))
+      if (pack.metrics.length) await db.metrics.bulkPut(structuredClone(pack.metrics))
+      if (pack.metricEntries?.length) await db.metricEntries.bulkPut(structuredClone(pack.metricEntries))
+      if (pack.reviews?.length) await db.reviews.bulkPut(structuredClone(pack.reviews))
+    })
+    const [allProjects, lifeAreas, goals, metrics, metricEntries, reviews] = await Promise.all([
+      db.projects.toArray(), db.lifeAreas.orderBy('order').toArray(), db.goals.toArray(), db.metrics.toArray(), db.metricEntries.toArray(), db.reviews.orderBy('startDate').reverse().toArray(),
+    ])
+    set({ projects: allProjects, lifeAreas, goals, metrics, metricEntries, reviews, activeProjectId: projects[0]?.project.id ?? get().activeProjectId, view: 'life' })
+  },
+
+  restoreBackup: async (backup) => {
+    const data = structuredClone(backup.data)
+    await db.transaction('rw', [db.projects, db.lifeAreas, db.goals, db.metrics, db.metricEntries, db.reviews], async () => {
+      await Promise.all([db.projects.clear(), db.lifeAreas.clear(), db.goals.clear(), db.metrics.clear(), db.metricEntries.clear(), db.reviews.clear()])
+      if (data.projects.length) await db.projects.bulkPut(data.projects)
+      if (data.lifeAreas.length) await db.lifeAreas.bulkPut(data.lifeAreas)
+      if (data.goals.length) await db.goals.bulkPut(data.goals)
+      if (data.metrics.length) await db.metrics.bulkPut(data.metrics)
+      if (data.metricEntries.length) await db.metricEntries.bulkPut(data.metricEntries)
+      if (data.reviews.length) await db.reviews.bulkPut(data.reviews)
+    })
+    set({ ...data, activeProjectId: data.projects[0]?.project.id, selectedNodeId: undefined, view: 'today' })
+  },
+
   deleteProject: async (projectId) => {
     await db.projects.delete(projectId)
     set((state) => {
       const projects = state.projects.filter((item) => item.project.id !== projectId)
       return { projects, activeProjectId: projects[0]?.project.id, view: 'paths' }
     })
+  },
+
+  saveLifeArea: async (area) => {
+    await db.lifeAreas.put(structuredClone(area))
+    set((state) => ({ lifeAreas: [...state.lifeAreas.filter((item) => item.id !== area.id), area].sort((a, b) => a.order - b.order) }))
+  },
+
+  archiveLifeArea: async (areaId) => {
+    const area = get().lifeAreas.find((item) => item.id === areaId)
+    if (!area || area.id === 'area-uncategorized') return
+    const archived = { ...area, archived: true, updatedAt: new Date().toISOString() }
+    await db.lifeAreas.put(archived)
+    set((state) => ({ lifeAreas: state.lifeAreas.map((item) => item.id === areaId ? archived : item) }))
+  },
+
+  saveGoal: async (goal) => {
+    await db.goals.put(structuredClone(goal))
+    set((state) => ({ goals: [...state.goals.filter((item) => item.id !== goal.id), goal] }))
+  },
+
+  archiveGoal: async (goalId) => {
+    const goal = get().goals.find((item) => item.id === goalId)
+    if (!goal) return
+    const archived = { ...goal, status: 'paused' as const, updatedAt: new Date().toISOString() }
+    await db.goals.put(archived)
+    set((state) => ({ goals: state.goals.map((item) => item.id === goalId ? archived : item) }))
+  },
+
+  saveReview: async (review) => {
+    await db.reviews.put(structuredClone(review))
+    set((state) => ({ reviews: [review, ...state.reviews.filter((item) => item.id !== review.id)].sort((a, b) => b.startDate.localeCompare(a.startDate)) }))
+  },
+
+  deleteReview: async (reviewId) => {
+    await db.reviews.delete(reviewId)
+    set((state) => ({ reviews: state.reviews.filter((item) => item.id !== reviewId) }))
+  },
+
+  updateProjectMeta: async (projectId, patch) => {
+    const current = get().projects.find((item) => item.project.id === projectId)
+    if (!current) return
+    const project = { ...current, project: { ...current.project, ...patch, id: current.project.id, updatedAt: new Date().toISOString() } }
+    await persist(project)
+    set((state) => ({ projects: state.projects.map((item) => item.project.id === projectId ? project : item) }))
   },
 
   choosePath: async (optionNodeId) => {

@@ -4,6 +4,7 @@ import { CheckCircle2 } from 'lucide-react'
 import { AppShell } from './components/app-shell/AppShell'
 import { ChangeModal } from './components/modals/ChangeModal'
 import { ImportProjectModal } from './components/modals/ImportProjectModal'
+import { OnboardingModal } from './components/modals/OnboardingModal'
 import { RealityEventModal } from './components/modals/RealityEventModal'
 import { DashboardPage } from './pages/DashboardPage'
 import { GlobalTimelinePage } from './pages/GlobalTimelinePage'
@@ -24,17 +25,24 @@ const VersionsPage = lazy(() => import('./pages/VersionsPage').then((module) => 
 function App() {
   const {
     projects,
+    lifeAreas,
+    goals,
+    metrics,
+    metricEntries,
+    reviews,
     activeProjectId,
     view,
     isReady,
     initialize,
     importProject,
+    importLifePack,
     recordChange,
     addRealityEvent,
   } = useMasaratStore()
   const [showImport, setShowImport] = useState(false)
   const [showChange, setShowChange] = useState(false)
   const [showReality, setShowReality] = useState(false)
+  const [showOnboarding, setShowOnboarding] = useState(() => localStorage.getItem('masarat-onboarding-v1') !== 'done')
   const [toast, setToast] = useState<string>()
 
   useEffect(() => {
@@ -68,7 +76,7 @@ function App() {
     if (view === 'paths') return <DashboardPage onImport={() => setShowImport(true)} />
     if (view === 'global-timeline') return <GlobalTimelinePage />
     if (view === 'reviews') return <ReviewsPage />
-    if (view === 'settings') return <SettingsPage onImport={() => setShowImport(true)} />
+    if (view === 'settings') return <SettingsPage onImport={() => setShowImport(true)} onNotify={setToast} />
     if (!activeProject) {
       return <DashboardPage onImport={() => setShowImport(true)} />
     }
@@ -115,14 +123,20 @@ function App() {
       </AppShell>
 
       <AnimatePresence>
+        {showOnboarding && <OnboardingModal onClose={() => setShowOnboarding(false)} onImport={() => setShowImport(true)} />}
         {showImport && (
           <ImportProjectModal
-            projects={projects}
+            data={{ projects, lifeAreas, goals, metrics, metricEntries, reviews }}
             onClose={() => setShowImport(false)}
             onImport={async (project, mode) => {
               await importProject(project, mode)
               setShowImport(false)
               setToast(mode === 'update' ? 'تم تحديث المشروع مع الحفاظ على تقدمك' : 'تم استيراد المشروع بنجاح')
+            }}
+            onImportLifePack={async (pack) => {
+              await importLifePack(pack)
+              setShowImport(false)
+              setToast('تم دمج Life Pack مع الحفاظ على تقدم المشاريع الحالية')
             }}
           />
         )}

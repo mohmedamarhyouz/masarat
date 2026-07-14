@@ -1,14 +1,19 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import App from './App'
 import { db } from './lib/db'
 import { useMasaratStore } from './store/use-masarat-store'
 
 describe('Masarat application shell', () => {
+  beforeEach(() => localStorage.setItem('masarat-onboarding-v1', 'done'))
+
   afterEach(async () => {
     cleanup()
     await db.projects.clear()
-    useMasaratStore.setState({ projects: [], activeProjectId: undefined, view: 'today', isReady: false })
+    await db.lifeAreas.clear()
+    await db.goals.clear()
+    await db.reviews.clear()
+    useMasaratStore.setState({ projects: [], lifeAreas: [], goals: [], metrics: [], metricEntries: [], reviews: [], activeProjectId: undefined, view: 'today', isReady: false })
   })
 
   it('seeds the example project and builds the Today focus list', async () => {
@@ -23,7 +28,7 @@ describe('Masarat application shell', () => {
     await screen.findByText('ركّز على ما يحرّك حياتك اليوم.')
     fireEvent.click(screen.getByRole('button', { name: /متابعة من حيث توقفت/ }))
     await waitFor(() => expect(screen.getByText('قائمة التنفيذ')).toBeInTheDocument())
-    expect(screen.getByText('المهام المكتملة')).toBeInTheDocument()
+    expect(screen.getByText('كل المهام')).toBeInTheDocument()
   })
 
   it('moves from Today to the horizontal decision canvas through path navigation', async () => {
@@ -58,5 +63,27 @@ describe('Masarat application shell', () => {
       const stored = activeProjectId ? await db.projects.get(activeProjectId) : undefined
       expect(stored?.tasks.find((item) => item.id === task!.id)?.status).toBe('completed')
     })
+  })
+
+  it('creates and persists a new life area', async () => {
+    render(<App />)
+    await screen.findByText('ركّز على ما يحرّك حياتك اليوم.')
+    fireEvent.click(screen.getByRole('button', { name: 'حياتي' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'مجال جديد' }))
+    fireEvent.change(screen.getByLabelText('اسم المجال'), { target: { value: 'مجال تجريبي' } })
+    fireEvent.click(screen.getByRole('button', { name: 'حفظ المجال' }))
+    expect(await screen.findByText('مجال تجريبي')).toBeInTheDocument()
+    expect((await db.lifeAreas.toArray()).some((area) => area.name === 'مجال تجريبي')).toBe(true)
+  })
+
+  it('creates a local weekly review', async () => {
+    render(<App />)
+    await screen.findByText('ركّز على ما يحرّك حياتك اليوم.')
+    fireEvent.click(screen.getByRole('button', { name: 'المراجعات' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'مراجعة جديدة' }))
+    fireEvent.change(screen.getByLabelText('الخلاصة'), { target: { value: 'أسبوع جيد مع تقدم واضح' } })
+    fireEvent.click(screen.getByRole('button', { name: 'حفظ المراجعة' }))
+    expect(await screen.findByText('أسبوع جيد مع تقدم واضح')).toBeInTheDocument()
+    expect(await db.reviews.count()).toBe(1)
   })
 })

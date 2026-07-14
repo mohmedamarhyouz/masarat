@@ -28,6 +28,7 @@ export interface LifeArea {
   order: number
   createdAt: string
   updatedAt: string
+  archived?: boolean
 }
 
 export interface Goal {
@@ -66,6 +67,8 @@ export interface Review {
   wins: string[]
   problems: string[]
   nextFocus: string[]
+  createdAt?: string
+  updatedAt?: string
 }
 
 export interface ProjectMeta {
@@ -214,4 +217,43 @@ export interface ProjectDiff {
   removedTasks: Task[]
   changedTasks: Array<{ before: Task; after: Task }>
   goalChanged: boolean
+}
+
+export interface LifePack {
+  format: 'masarat'
+  schemaVersion: '2.0'
+  packageType: 'life-pack'
+  title?: string
+  exportedAt?: string
+  areas: LifeArea[]
+  goals: Goal[]
+  projects: MasaratProject[]
+  metrics: Metric[]
+  metricEntries?: MetricEntry[]
+  reviews?: Review[]
+}
+
+export interface MasaratBackup {
+  format: 'masarat-backup'
+  schemaVersion: '1.0'
+  exportedAt: string
+  data: {
+    projects: MasaratProject[]
+    lifeAreas: LifeArea[]
+    goals: Goal[]
+    metrics: Metric[]
+    metricEntries: MetricEntry[]
+    reviews: Review[]
+  }
+}
+
+export interface LifePackDiff {
+  newAreas: number
+  updatedAreas: number
+  newGoals: number
+  updatedGoals: number
+  newProjects: number
+  updatedProjects: number
+  newMetrics: number
+  updatedMetrics: number
 }

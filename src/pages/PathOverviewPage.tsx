@@ -4,7 +4,7 @@ import { useMasaratStore } from '../store/use-masarat-store'
 import type { MasaratProject } from '../types/masarat'
 
 export function PathOverviewPage({ project }: { project: MasaratProject }) {
-  const { lifeAreas, goals, setView } = useMasaratStore()
+  const { lifeAreas, goals, setView, updateProjectMeta } = useMasaratStore()
   const progress = calculateProgress(project)
   const area = lifeAreas.find((item) => item.id === project.project.areaId)
   const goal = goals.find((item) => item.id === project.project.goalId)
@@ -26,7 +26,7 @@ export function PathOverviewPage({ project }: { project: MasaratProject }) {
       </div>
       <div className="path-overview-layout">
         <section className="next-action-card"><span className="eyebrow">الخطوة التالية</span><h3>{nextTask?.title ?? 'حان وقت مراجعة النتيجة'}</h3><p>{nextTask?.description ?? 'لا توجد مهام مفتوحة. سجّل ما حدث فعليًا واستخلص الدرس.'}</p><div>{nextTask && <button className="button button--primary" onClick={() => setView('plan')}><ListChecks size={17} /> فتح التنفيذ</button>}<button className="button button--ghost" onClick={() => setView('canvas')}><GitBranch size={17} /> رؤية الخريطة</button></div></section>
-        <aside className="decision-context"><h3><ShieldCheck size={18} /> سياق القرار</h3><div><small>لماذا هذا المسار؟</small><p>{project.project.goal}</p></div><div><small>القيود الأساسية</small><ul>{project.constraints.slice(0, 4).map((constraint) => <li key={constraint.id}>{constraint.title}</li>)}</ul></div><button className="text-action" onClick={() => setView('canvas')}>استكشف الفروع والسيناريوهات <ArrowLeft size={14} /></button></aside>
+        <aside className="decision-context"><h3><ShieldCheck size={18} /> سياق القرار</h3><div className="path-link-fields"><label><small>مجال الحياة</small><select value={project.project.areaId ?? 'area-uncategorized'} onChange={(event) => updateProjectMeta(project.project.id, { areaId: event.target.value, goalId: undefined })}>{lifeAreas.filter((item) => !item.archived).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label><label><small>الهدف المرتبط</small><select value={project.project.goalId ?? ''} onChange={(event) => updateProjectMeta(project.project.id, { goalId: event.target.value || undefined })}><option value="">دون هدف</option>{goals.filter((item) => item.areaId === (project.project.areaId ?? 'area-uncategorized')).map((item) => <option key={item.id} value={item.id}>{item.title}</option>)}</select></label></div><div><small>لماذا هذا المسار؟</small><p>{project.project.goal}</p></div><div><small>القيود الأساسية</small><ul>{project.constraints.slice(0, 4).map((constraint) => <li key={constraint.id}>{constraint.title}</li>)}</ul></div><button className="text-action" onClick={() => setView('canvas')}>استكشف الفروع والسيناريوهات <ArrowLeft size={14} /></button></aside>
       </div>
     </div>
   )

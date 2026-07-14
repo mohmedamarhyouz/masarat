@@ -91,6 +91,58 @@ const versionSchema = z.object({
   snapshot: snapshotSchema,
 })
 
+export const lifeAreaSchema = z.object({
+  id: z.string().min(1),
+  name: z.string().min(1),
+  icon: z.string().min(1),
+  color: z.string().regex(/^#[0-9a-fA-F]{6}$/),
+  status: z.enum(['stable', 'attention', 'critical']),
+  order: z.number().int().nonnegative(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  archived: z.boolean().optional(),
+})
+
+export const goalSchema = z.object({
+  id: z.string().min(1),
+  areaId: z.string().min(1),
+  title: z.string().min(1),
+  description: z.string().optional(),
+  status: z.enum(['planned', 'active', 'paused', 'completed']),
+  targetDate: z.string().optional(),
+  progress: z.number().min(0).max(100),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+})
+
+export const metricSchema = z.object({
+  id: z.string().min(1),
+  areaId: z.string().min(1),
+  name: z.string().min(1),
+  unit: z.string().min(1),
+  target: z.number().optional(),
+})
+
+export const metricEntrySchema = z.object({
+  id: z.string().min(1),
+  metricId: z.string().min(1),
+  date: z.string(),
+  value: z.number(),
+  note: z.string().optional(),
+})
+
+export const reviewSchema = z.object({
+  id: z.string().min(1),
+  type: z.enum(['weekly', 'monthly', 'yearly']),
+  startDate: z.string(),
+  summary: z.string(),
+  wins: z.array(z.string()),
+  problems: z.array(z.string()),
+  nextFocus: z.array(z.string()),
+  createdAt: z.string().optional(),
+  updatedAt: z.string().optional(),
+})
+
 export const masaratProjectSchema = z.object({
   format: z.literal('masarat'),
   schemaVersion: z.literal('1.0'),
@@ -141,4 +193,54 @@ export type ParsedMasaratProject = z.infer<typeof masaratProjectSchema>
 
 export function parseMasaratProject(input: unknown) {
   return masaratProjectSchema.parse(input)
+}
+
+export const lifePackSchema = z.object({
+  format: z.literal('masarat'),
+  schemaVersion: z.literal('2.0'),
+  packageType: z.literal('life-pack'),
+  title: z.string().optional(),
+  exportedAt: z.string().optional(),
+  areas: z.array(lifeAreaSchema).default([]),
+  goals: z.array(goalSchema).default([]),
+  projects: z.array(masaratProjectSchema).default([]),
+  metrics: z.array(metricSchema).default([]),
+  metricEntries: z.array(metricEntrySchema).default([]),
+  reviews: z.array(reviewSchema).default([]),
+}).superRefine((pack, ctx) => {
+  const ensureUnique = (items: Array<{ id: string }>, path: string) => {
+    if (new Set(items.map((item) => item.id)).size !== items.length) {
+      ctx.addIssue({ code: 'custom', message: `المعرّفات داخل ${path} يجب أن تكون فريدة`, path: [path] })
+    }
+  }
+  ensureUnique(pack.areas, 'areas')
+  ensureUnique(pack.goals, 'goals')
+  ensureUnique(pack.projects.map((item) => ({ id: item.project.id })), 'projects')
+  ensureUnique(pack.metrics, 'metrics')
+  const areaIds = new Set(pack.areas.map((area) => area.id))
+  pack.goals.forEach((goal, index) => {
+    if (!areaIds.has(goal.areaId)) ctx.addIssue({ code: 'custom', message: 'هدف مرتبط بمجال غير موجود', path: ['goals', index, 'areaId'] })
+  })
+})
+
+export const masaratBackupSchema = z.object({
+  format: z.literal('masarat-backup'),
+  schemaVersion: z.literal('1.0'),
+  exportedAt: z.string(),
+  data: z.object({
+    projects: z.array(masaratProjectSchema),
+    lifeAreas: z.array(lifeAreaSchema),
+    goals: z.array(goalSchema),
+    metrics: z.array(metricSchema),
+    metricEntries: z.array(metricEntrySchema),
+    reviews: z.array(reviewSchema),
+  }),
+})
+
+export function parseLifePack(input: unknown) {
+  return lifePackSchema.parse(input)
+}
+
+export function parseMasaratBackup(input: unknown) {
+  return masaratBackupSchema.parse(input)
 }
