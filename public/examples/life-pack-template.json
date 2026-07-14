@@ -1,0 +1,35 @@
+{
+  "format": "masarat",
+  "schemaVersion": "2.0",
+  "packageType": "life-pack",
+  "title": "Life Pack template",
+  "exportedAt": "2026-07-14T20:00:00.000Z",
+  "areas": [
+    {
+      "id": "area-example",
+      "name": "Example area",
+      "icon": "sparkles",
+      "color": "#64adff",
+      "status": "stable",
+      "order": 1,
+      "createdAt": "2026-07-14T20:00:00.000Z",
+      "updatedAt": "2026-07-14T20:00:00.000Z"
+    }
+  ],
+  "goals": [
+    {
+      "id": "goal-example",
+      "areaId": "area-example",
+      "title": "Define a measurable result",
+      "description": "Replace this template with a real goal generated externally or written manually.",
+      "status": "planned",
+      "progress": 0,
+      "createdAt": "2026-07-14T20:00:00.000Z",
+      "updatedAt": "2026-07-14T20:00:00.000Z"
+    }
+  ],
+  "projects": [],
+  "metrics": [],
+  "metricEntries": [],
+  "reviews": []
+}
