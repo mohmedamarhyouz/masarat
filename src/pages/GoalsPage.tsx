@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Archive, ArrowLeft, CalendarDays, Edit3, Flag, Plus, Target } from 'lucide-react'
 import { GoalModal } from '../components/modals/GoalModal'
-import { useI18n } from '../lib/i18n'
+import { localizedAreaName, useI18n } from '../lib/i18n'
 import { useMasaratStore } from '../store/use-masarat-store'
 import type { Goal } from '../types/masarat'
 
@@ -23,7 +23,7 @@ export function GoalsPage() {
             <motion.article className="goal-card" key={goal.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * .06 }}>
               <div className="goal-card__icon" style={{ '--goal-color': area?.color ?? '#5aa7ff' } as React.CSSProperties}><Target size={21} /></div>
               <div className="goal-card__main">
-                <div className="goal-card__title"><div><span>{area?.name ?? c.uncategorized}</span><h3>{goal.title}</h3></div><div className="goal-actions"><span className={`status-pill status-pill--${goal.status === 'active' ? 'active' : 'paused'}`}><i />{c.status[goal.status]}</span><button aria-label={`${c.edit} ${goal.title}`} onClick={() => setEditing(goal)}><Edit3 size={14} /></button>{goal.status !== 'paused' && <button aria-label={`${c.pause} ${goal.title}`} onClick={() => archiveGoal(goal.id)}><Archive size={14} /></button>}</div></div>
+                <div className="goal-card__title"><div><span>{area ? localizedAreaName(area, language) : c.uncategorized}</span><h3>{goal.title}</h3></div><div className="goal-actions"><span className={`status-pill status-pill--${goal.status === 'active' ? 'active' : 'paused'}`}><i />{c.status[goal.status]}</span><button aria-label={`${c.edit} ${goal.title}`} onClick={() => setEditing(goal)}><Edit3 size={14} /></button>{goal.status !== 'paused' && <button aria-label={`${c.pause} ${goal.title}`} onClick={() => archiveGoal(goal.id)}><Archive size={14} /></button>}</div></div>
                 {goal.description && <p>{goal.description}</p>}
                 <div className="goal-progress"><div><span>{c.progress}</span><b>{goal.progress}%</b></div><div className="progress-track"><span style={{ width: `${goal.progress}%` }} /></div></div>
                 <div className="goal-card__footer"><span><Flag size={14} /> {relatedProjects.length} {c.linked}</span><span><CalendarDays size={14} /> {goal.targetDate ? new Intl.DateTimeFormat(locale).format(new Date(goal.targetDate)) : c.noDeadline}</span>{relatedProjects[0] && <button onClick={() => { setActiveProject(relatedProjects[0].project.id); setView('path-overview') }}>{c.open} <ArrowLeft size={14} /></button>}</div>

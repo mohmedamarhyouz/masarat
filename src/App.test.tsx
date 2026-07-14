@@ -98,5 +98,7 @@ describe('Masarat application shell', () => {
     expect(await screen.findByText('Know what needs your attention now.')).toBeInTheDocument()
     expect(document.documentElement.dir).toBe('ltr')
     expect(localStorage.getItem('masarat-language')).toBe('en')
+    fireEvent.click(screen.getByRole('button', { name: 'My Life' }))
+    expect((await screen.findAllByText('Money')).length).toBeGreaterThan(0)
   })
 })

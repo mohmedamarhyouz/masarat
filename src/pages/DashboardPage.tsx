@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion'
 import { ArrowLeft, CalendarClock, CheckCircle2, FileUp, FolderPlus, GitBranch, ListChecks, MoreHorizontal, Play, Route, ShieldCheck, Sparkles } from 'lucide-react'
 import { calculateProgress } from '../lib/project-utils'
-import { useI18n } from '../lib/i18n'
+import { localizedAreaName, useI18n } from '../lib/i18n'
 import { useMasaratStore } from '../store/use-masarat-store'
 
 export function DashboardPage({ onImport }: { onImport: () => void }) {
@@ -90,7 +90,7 @@ export function DashboardPage({ onImport }: { onImport: () => void }) {
                 </div>
                 <button className="project-card__body" onClick={() => openProject(item.project.id)}>
                   <div className="project-card__route"><span /><span /><span /><i><ShieldCheck size={13} /></i></div>
-                  {area && <span className="project-area-pill" style={{ '--area-color': area.color } as React.CSSProperties}>{area.name}</span>}
+                  {area && <span className="project-area-pill" style={{ '--area-color': area.color } as React.CSSProperties}>{localizedAreaName(area, language)}</span>}
                   <h4>{item.project.title}</h4>
                   <p>{item.project.goal}</p>
                 </button>

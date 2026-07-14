@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import type { Goal, LifeArea } from '../../types/masarat'
-import { useI18n } from '../../lib/i18n'
+import { localizedAreaName, useI18n } from '../../lib/i18n'
 import { Modal } from './Modal'
 
 export function GoalModal({ goal, areas, onClose, onSave }: {
@@ -33,7 +33,7 @@ export function GoalModal({ goal, areas, onClose, onSave }: {
         <label><span>{c.name}</span><input value={title} onChange={(event) => setTitle(event.target.value)} placeholder={c.namePlaceholder} autoFocus required /></label>
         <label><span>{c.description}</span><textarea rows={3} value={description} onChange={(event) => setDescription(event.target.value)} placeholder={c.descriptionPlaceholder} /></label>
         <div className="form-grid form-grid--three">
-          <label><span>{c.area}</span><select value={areaId} onChange={(event) => setAreaId(event.target.value)}>{areas.filter((area) => !area.archived).map((area) => <option key={area.id} value={area.id}>{area.name}</option>)}</select></label>
+          <label><span>{c.area}</span><select value={areaId} onChange={(event) => setAreaId(event.target.value)}>{areas.filter((area) => !area.archived).map((area) => <option key={area.id} value={area.id}>{localizedAreaName(area, language)}</option>)}</select></label>
           <label><span>{c.status}</span><select value={status} onChange={(event) => setStatus(event.target.value as Goal['status'])}><option value="planned">{c.planned}</option><option value="active">{c.active}</option><option value="paused">{c.paused}</option><option value="completed">{c.completed}</option></select></label>
           <label><span>{c.target}</span><input type="date" value={targetDate} onChange={(event) => setTargetDate(event.target.value)} /></label>
         </div>

@@ -63,8 +63,9 @@ export function Header({ project, onImport, onChange }: HeaderProps) {
           </>
         )}
         <button className="language-switch" onClick={() => setLanguage(language === 'ar' ? 'en' : 'ar')} title={t.languageTitle}><Languages size={16} /><span>{t.language}</span></button>
-        <button className="icon-button" onClick={onImport} title={t.importFile}>
+        <button className="header-import-button" onClick={onImport} title={t.importFile}>
           {project ? <FileUp size={19} /> : <Plus size={20} />}
+          <span>{t.importFile}</span>
         </button>
       </div>
     </header>

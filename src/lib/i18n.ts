@@ -2,6 +2,21 @@ import { useMasaratStore } from '../store/use-masarat-store'
 
 export type Language = 'ar' | 'en'
 
+const defaultAreaNames: Record<string, { ar: string; en: string }> = {
+  'area-money': { ar: 'المال', en: 'Money' },
+  'area-study': { ar: 'الدراسة', en: 'Study' },
+  'area-career': { ar: 'المسار المهني', en: 'Career' },
+  'area-health': { ar: 'الصحة', en: 'Health' },
+  'area-transport': { ar: 'التنقل', en: 'Transport' },
+  'area-family': { ar: 'العائلة', en: 'Family' },
+  'area-growth': { ar: 'التطور الشخصي', en: 'Personal growth' },
+  'area-uncategorized': { ar: 'غير مصنف', en: 'Uncategorized' },
+}
+
+export function localizedAreaName(area: { id: string; name: string }, language: Language) {
+  return defaultAreaNames[area.id]?.[language] ?? area.name
+}
+
 const copy = {
   ar: {
     navControl: 'القيادة', navPlan: 'التخطيط', navReflect: 'المراجعة',
